@@ -13,37 +13,37 @@ import pandas as pd
 
 df_url = 'https://datos.alcobendas.org/dataset/9cc894a1-8cfb-4dfe-a29f-fb197aa03ae0/resource/eff1bb9c-110e-4962-8370-d78589f987c2/download/uso-de-autobuses.csv'
 df = round(pd.read_csv(df_url),2)
+df.rename(columns={'Línea':'Line', 'Año':'Year'}, inplace=True)
 
+years = df.Year.unique().tolist()
+line = df.Line.unique().tolist()
 
 app = dash.Dash(__name__)
 server = app.server
 
+app.config.suppress_callback_exceptions = True
 
-app.layout = html.Div([
-    html.H2('Public transport of Alcobendas'),
-    dash_table.DataTable(
-    id='table',
-    columns=[{"name":i,"id":i} for i in df.columns],
-    data=df.to_dict('records'),
-    style_cell={'textAlign': 'center'},
-    style_cell_conditional=[
-        {
-            'if':{'column_id':'Tipo de transporte'},
-            'textAlign':'left'
-        }],
-    filter_action="native",
-    sort_action="native",
-    sort_mode="multi",
-    column_selectable="single",
-    #row_selectable="multi",
-    #row_deletable=True,
-    #selected_columns=[],
-    #selected_rows=[],
-    page_action="native",
-    #page_current= 0,
-    #page_size= 10,   
-    )
-])
+app.layout = html.Div(
+    children=["Select the line and the year that you want to observe:",
+    dcc.Dropdown(
+            id='filter_dropdown',
+            options=[{'label':st, 'value':st} for st in line],
+            value = line[0]
+            ),
+    dcc.Dropdown(
+            id='filter_dropdown_y',
+            options=[{'label':yr, 'value':yr} for yr in years],
+            value= years[0]
+            ),
+    dash_table.DataTable(id='table-container', columns=[{'id': c, 'name': c} for c in df.columns.values]) ]
+)
+
+@app.callback(
+    Output('table-container', 'data'),
+    [Input('filter_dropdown', 'value') ])
+def display_table(line):
+    dff = df[df.Line==line]
+    return dff.to_dict('records')
 
 if __name__ == '__main__':
     app.run_server(debug=True)
