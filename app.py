@@ -7,21 +7,23 @@ import dash_bootstrap_components as dbc # import the library
 import dash_table
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
+from textwrap import dedent as d
 import json
 
 import pandas as pd
 
 df_url = 'https://datos.alcobendas.org/dataset/9cc894a1-8cfb-4dfe-a29f-fb197aa03ae0/resource/eff1bb9c-110e-4962-8370-d78589f987c2/download/uso-de-autobuses.csv'
 df = round(pd.read_csv(df_url),2)
-df.rename(columns={'Línea':'Line', 'Año':'Year'}, inplace=True)
+df.rename(columns={'Línea':'Line', 'Año':'Year', 'Tipo de transporte':'Type'}, inplace=True)
 
 
-dfm=pd.melt(df, id_vars =['Line','Year'], value_vars =['Número anual de pasajeros','Expediciones por día laborable','Viajeros por día','Viajeros por expedición','Kilómetros anuales realizados'])
+dfm=pd.melt(df, id_vars =['Line','Year','Type'], value_vars =['Número anual de pasajeros','Expediciones por día laborable','Viajeros por día','Viajeros por expedición','Kilómetros anuales realizados'])
 
 years = df.Year.unique().tolist()
 line = df.Line.unique().tolist()
+Bustype = df.Type.unique().tolist()
 variables = dfm['variable'].unique()
-
+bins = [0]
 
 app = dash.Dash(__name__)
 server = app.server
@@ -85,6 +87,32 @@ app.layout = html.Div([
                 value = line[0]
             ),
             dash_table.DataTable(id='table-container', columns=[{'id': c, 'name': c} for c in df.columns.values]) ]),#Close tab=Data
+        dcc.Tab(label='Distribution of variables', children=["Select the variable that you want to observe:",
+            dcc.Dropdown(
+                id='crossfilter-yaxis-columnH',
+                options=[{'label': i, 'value': i} for i in variables],
+                value='Número anual de pasajeros'
+            ),
+            dcc.Graph(
+                id='Histogram'    
+            ),
+            dcc.Slider(
+                id='crossfilter-year--slider1',
+                min=df['Year'].min(),
+                max=df['Year'].max(),
+                value=df['Year'].max(),
+                marks={str(years): str(years) for years in df['Year'].unique()},
+                step=None
+            ),
+            dcc.Slider(
+                id='crossfilter-bin-slider',
+                min=0,
+                max=20,
+                value=10,
+                marks={i: '{}'.format(i) for i in range(21)},
+                step=1
+            ) 
+        ]),
         dcc.Tab(label='Relations between variables', children=["In this panel you can observe the relation between the selected variables",
             dcc.Dropdown(
                 id='crossfilter-xaxis-column',
@@ -120,7 +148,17 @@ app.layout = html.Div([
                 marks={str(years): str(years) for years in df['Year'].unique()},
                 step=None
             )
-            ])
+        ]),
+        dcc.Tab(label='Differences between two types', children=["In this panel you can observe the differences between the selected variables",
+            dcc.Dropdown(
+                id='crossfilter-yaxis-column_box',
+                options=[{'label': i, 'value': i} for i in variables],
+                value='Número anual de pasajeros'
+            ),
+            dcc.Graph(
+                id='crossfilter-indicator-boxplot',
+            ),
+        ])
     ]) #Close Tabs
 ])
 
@@ -130,6 +168,25 @@ app.layout = html.Div([
 def display_table(line):
     dff = df[df.Line==line]
     return dff.to_dict('records')
+
+@app.callback(
+    dash.dependencies.Output('Histogram', 'figure'),
+    [dash.dependencies.Input('crossfilter-yaxis-columnH','value'),
+     dash.dependencies.Input('crossfilter-year--slider1', 'value')])
+def update_hist(yaxis_column_name,year_value):
+    df1 = dfm[dfm['Year'] == year_value]
+    return {
+        'data': [
+            go.Histogram(
+            x=df1[df1['variable'] == yaxis_column_name]['value'],
+            text=df1[df1['variable'] == yaxis_column_name]['Line'],
+            customdata=df1[df1['variable'] == yaxis_column_name]['Line'],
+            histnorm='probability',
+            nbinsx=10
+        )],
+        'layout': {}
+    }   
+
 
 @app.callback(
     dash.dependencies.Output('crossfilter-indicator-scatter', 'figure'),
@@ -169,6 +226,12 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             hovermode='closest'
         )
     }
+
+@app.callback(
+    dash.dependencies.Output('crossfilter-indicator-boxplot', 'figure'),
+    [dash.dependencies.Input('crossfilter-yaxis-column1', 'value'),
+     dash.dependencies.Input('crossfilter-yaxis-column1', 'value'),
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
