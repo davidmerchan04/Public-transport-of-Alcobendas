@@ -156,7 +156,15 @@ app.layout = html.Div([
                 value='Número anual de pasajeros'
             ),
             dcc.Graph(
-                id='crossfilter-indicator-boxplot',
+                id='boxplot',
+            ),
+            dcc.Slider(
+                id='crossfilter-year--sliderbox',
+                min=df['Year'].min(),
+                max=df['Year'].max(),
+                value=df['Year'].max(),
+                marks={str(years): str(years) for years in df['Year'].unique()},
+                step=None
             ),
         ])
     ]) #Close Tabs
@@ -228,9 +236,20 @@ def update_graph(xaxis_column_name, yaxis_column_name,
     }
 
 @app.callback(
-    dash.dependencies.Output('crossfilter-indicator-boxplot', 'figure'),
-    [dash.dependencies.Input('crossfilter-yaxis-column1', 'value'),
-     dash.dependencies.Input('crossfilter-yaxis-column1', 'value'),
+    dash.dependencies.Output('boxplot', 'figure'),
+    [dash.dependencies.Input('crossfilter-yaxis-column_box','value'),
+     dash.dependencies.Input('crossfilter-year--sliderbox', 'value')])
+def update_box(yaxis_column_name,year_value):
+    df1 = dfm[dfm['Year'] == year_value]
+    return {
+        'data': [
+            go.Box(
+            y=df1[df1['variable'] == yaxis_column_name]['value'],
+            x=df1.Type
+            #customdata=df1[df1['variable'] == yaxis_column_name]['Line'],
+            )],
+        'layout': {}
+    }   
 
 
 if __name__ == '__main__':
