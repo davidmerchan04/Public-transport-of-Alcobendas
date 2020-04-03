@@ -69,9 +69,9 @@ In this panel we can observe a plot that is called correlation plot, this is use
 from the down left side to the up rigth side the relation is positive. On the other hand, if that point cloud draws  a diagonal that decrease from the up left corner to  the down rigth corner we can say
 that those two variable have a negative relation. Otherwise, we can say that the variables have not relation. 
 
-* Other statistic information:
+* Differences between two types:
 
-In the final tab we can see another type of plots that let us understand some differences between the two types of autobuses in the public transport of Alcobendas (Interurban and Urban)
+In the final tab we can see a box plot that let us to understand some differences between the two types of autobuses in the public transport of Alcobendas (Interurban and Urban)
 
 
 '''
