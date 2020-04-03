@@ -104,16 +104,25 @@ app.layout = html.Div([
                 marks={str(years): str(years) for years in df['Year'].unique()},
                 step=None
             ),
-            dcc.Slider(
-                id='crossfilter-bin-slider',
-                min=0,
-                max=20,
-                value=10,
-                marks={i: '{}'.format(i) for i in range(21)},
-                step=1
-            ) 
+            #dcc.Slider(
+            #    id='crossfilter-bin-slider',
+            #    min=0,
+            #    max=20,
+            #    value=10,
+            #    marks={i: '{}'.format(i) for i in range(21)},
+            #    step=1
+            #) 
         ]),
-        dcc.Tab(label='Relations between variables', children=["In this panel you can observe the relation between the variables that you will select in the next dropdown",
+        dcc.Tab(label='Relations between variables', children=[
+            dcc.Markdown("""
+                **Relations between variables**
+
+                In this tab you can select two variables to observe their relation. Also, you can choose if you want to plot it in a linear
+                way or using log. 
+
+                Then, you will find different ways to know the informacion about the point, the first option is pass the mouse over the point, the second
+                one is click de point, and the final option is select points using the rectangule tool, if you decide to use this option a table will be shown with all the information about your selection
+            """),
             dcc.Dropdown(
                 id='crossfilter-xaxis-column',
                 options=[{'label': i, 'value': i} for i in variables],
@@ -166,7 +175,10 @@ app.layout = html.Div([
                 Choose the lasso or rectangle tool in the graph's menu
                 bar and then select points in the graph.
             """),
-             html.Pre(id='selected-data')
+             dash_table.DataTable(
+                id='my-table',
+                columns=[{"name": i, "id": i} for i in df.columns]
+            )
         ]),
         dcc.Tab(label='Differences between two types', children=["In this panel you can observe the differences between the selected variables",
             dcc.Dropdown(
@@ -213,7 +225,6 @@ def update_hist(yaxis_column_name,year_value):
         )],
         'layout': {}
     }   
-
 
 @app.callback(
     dash.dependencies.Output('crossfilter-indicator-scatter', 'figure'),
@@ -267,14 +278,17 @@ def display_hover_data(hoverData):
 def display_click_data(clickData):
     return json.dumps(clickData, indent=2)
 
-
 @app.callback(
-    Output('selected-data', 'children'),
+    Output('my-table', 'data'),
     [Input('crossfilter-indicator-scatter', 'selectedData')])
-def display_selected_data(selectedData):
-    return json.dumps(selectedData, indent=2)
-
-
+def display_selected_data(selected_data):
+    if selected_data is None or len(selected_data) == 0:
+        return []
+    points = selected_data['points']
+    if len(points) == 0:
+        return []
+    names = [x['text'] for x in points]
+    return df[df['Line'].isin(names)].to_dict("rows")
 
 @app.callback(
     dash.dependencies.Output('boxplot', 'figure'),
