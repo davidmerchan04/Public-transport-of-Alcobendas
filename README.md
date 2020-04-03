@@ -1,3 +1,9 @@
+Master: Master in statistics for Data Science 
+Course: Data Tidying and Reporting
+Year: 2020
+Name: David Enrique Merchán Cano
+Url: https://github.com/davidmerchan04/mydashpython.git
+
 # Public transport of Alcobendas - Dash Python App
 
 This app contains information about transport of Alcobendas, this information was collect by Ayuntamiento de Alcobendas. In this app we will different statistical plots that let you to infer how was the behavior of the public transport in Alcobendas between 2015 and 2017. 
