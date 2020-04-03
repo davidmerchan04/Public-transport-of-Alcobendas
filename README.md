@@ -1,7 +1,11 @@
 Master: Master in statistics for Data Science 
+
 Course: Data Tidying and Reporting
+
 Year: 2020
+
 Name: David Enrique Merchán Cano
+
 Url: https://github.com/davidmerchan04/mydashpython.git
 
 # Public transport of Alcobendas - Dash Python App
