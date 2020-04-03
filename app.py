@@ -80,14 +80,14 @@ app.layout = html.Div([
     dcc.Tabs([
         dcc.Tab(label='About', children=[
             dcc.Markdown(markdown_text)]),
-        dcc.Tab(label='Data', children=["Select the line and the year that you want to observe:",
+        dcc.Tab(label='Data', children=[" In this tab you can see the data. You can filter the information selecting the line that you want to observe:",
             dcc.Dropdown(
                 id='filter_dropdown',
                 options=[{'label':st, 'value':st} for st in line],
                 value = line[0]
             ),
             dash_table.DataTable(id='table-container', columns=[{'id': c, 'name': c} for c in df.columns.values]) ]),#Close tab=Data
-        dcc.Tab(label='Distribution of variables', children=["Select the variable that you want to observe:",
+        dcc.Tab(label='Distribution of variables', children=[" In this tab you can see a Histogram that let you to understand the distribution of variable that you will select in the next dropdown",
             dcc.Dropdown(
                 id='crossfilter-yaxis-columnH',
                 options=[{'label': i, 'value': i} for i in variables],
@@ -113,7 +113,7 @@ app.layout = html.Div([
                 step=1
             ) 
         ]),
-        dcc.Tab(label='Relations between variables', children=["In this panel you can observe the relation between the selected variables",
+        dcc.Tab(label='Relations between variables', children=["In this panel you can observe the relation between the variables that you will select in the next dropdown",
             dcc.Dropdown(
                 id='crossfilter-xaxis-column',
                 options=[{'label': i, 'value': i} for i in variables],
@@ -147,7 +147,26 @@ app.layout = html.Div([
                 value=df['Year'].max(),
                 marks={str(years): str(years) for years in df['Year'].unique()},
                 step=None
-            )
+            ),
+            dcc.Markdown("""
+                **Hover Data**
+
+                Mouse over values in the graph.
+            """),
+             html.Pre(id='hover-data'),
+            dcc.Markdown("""
+                **Click Data**
+
+                Click on points in the graph.
+            """),
+             html.Pre(id='click-data'),
+            dcc.Markdown("""
+                **Selection Data**
+
+                Choose the lasso or rectangle tool in the graph's menu
+                bar and then select points in the graph.
+            """),
+             html.Pre(id='selected-data')
         ]),
         dcc.Tab(label='Differences between two types', children=["In this panel you can observe the differences between the selected variables",
             dcc.Dropdown(
@@ -234,6 +253,28 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             hovermode='closest'
         )
     }
+
+@app.callback(
+    Output('hover-data', 'children'),
+    [Input('crossfilter-indicator-scatter', 'hoverData')])
+def display_hover_data(hoverData):
+    return json.dumps(hoverData, indent=2)
+
+
+@app.callback(
+    Output('click-data', 'children'),
+    [Input('crossfilter-indicator-scatter', 'clickData')])
+def display_click_data(clickData):
+    return json.dumps(clickData, indent=2)
+
+
+@app.callback(
+    Output('selected-data', 'children'),
+    [Input('crossfilter-indicator-scatter', 'selectedData')])
+def display_selected_data(selectedData):
+    return json.dumps(selectedData, indent=2)
+
+
 
 @app.callback(
     dash.dependencies.Output('boxplot', 'figure'),
